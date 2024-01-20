@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: docker/php
+      target: frankenphp_dev
+    env_file:
+      - .env
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-:80}, app:80
+    volumes:
+      - ./:/app
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./docker/php/frankenphp/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./docker/php/frankenphp/conf.d/app.dev.ini:/usr/local/etc/php/conf.d/app.dev.ini:ro
+      - /app/vendor
+    ports:
+      - target: 80
+        published: ${HTTP_PORT:-8000}
+        protocol: tcp
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    tty: true
+
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: app_db
+    ports:
+      - "5432"
+
+volumes:
+  caddy_data:
+  caddy_config:
